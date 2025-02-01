@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Feedback</title>
+    <style>
+        body { margin: 20px; font-family: Arial; }
+        label { float: left; width: 150px; }
+        #container {
+            width: 700px;
+            margin: 0 auto;
+            background-color: beige;
+            padding: 50px;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .counter { color: gray; font-size: 12px; }
+        #submissionsTable {
+            width: 90%;
+            max-width: 1200px;
+            margin: 40px auto;
+            border-collapse: collapse;
+            background: white;
+        }
+        #submissionsTable th, #submissionsTable td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: left;
+        }
+        #submissionsTable th { background: #f5f5f5; }
+        #submissionsTable tr:nth-child(even) { background: #fafafa; }
+        .option-text { margin: 5px 0 5px 20px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Feedback</h2>
+        <h3>Love something? Hate something? Let us know!</h3>
+        <p>Note: Fields marked with an asterisk(*) are mandatory</p>
+        
+        <form id="feedbackForm" method="post" novalidate>
+            <label>Title*:</label>
+            <input type="radio" name="title" value="miss" required />Miss
+            <input type="radio" name="title" value="mr" required />Mr.
+            <input type="radio" name="title" value="mrs" required />Mrs.
+            <span id="titleError" class="error"></span>
+            <br><br>
+
+            <label for="firstName">First Name*:</label>
+            <input type="text" name="firstName" id="firstName" maxlength="40"/>
+            <span id="firstNameError" class="error"></span>
+            <br><br>
+
+            <label for="lastName">Last Name*:</label>
+            <input type="text" name="lastName" id="lastName" maxlength="40"/>
+            <span id="lastNameError" class="error"></span>
+            <br><br>
+
+            <label for="emailId">Email Id*:</label>
+            <input type="text" name="emailId" id="emailId" placeholder="x.xx@northeastern.edu"/>
+            <span id="emailIdError" class="error"></span>
+            <br><br>
+
+            <label for="phoneNumber">Phone Number*:</label>
+            <input type="text" name="phoneNumber" id="phoneNumber" placeholder="(XXX) XXX-XXXX" />
+            <span id="phoneNumberError" class="error"></span>
+            <br><br>
+
+            <label for="zipcode">ZipCode*:</label>
+            <input type="text" name="zipcode" id="zipcode"/>
+            <span id="zipcodeError" class="error"></span>
+            <br><br>
+
+            <label for="streetAddress1">Street Address 1*:</label>
+            <input type="text" name="streetAddress1" id="streetAddress1" maxlength="20"/>
+            <span id="streetAddress1Error" class="error"></span>
+            <br><br>
+
+            <label for="streetAddress2">Street Address 2:</label>
+            <input type="text" name="streetAddress2" id="streetAddress2" maxlength="20"/>
+            <span id="streetAddress2Counter" class="counter"></span>
+            <br><br>
+
+            <label for="dynamicSelect">How did you hear*:</label>
+            <select id="dynamicSelect">
+                <option value="">Select an option</option>
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+                <option value="option3">Option 3</option>
+                <option value="option4">Option 4</option>
+                <option value="option5">Option 5</option>
+            </select>
+            <span id="dynamicSelectError" class="error"></span>
+            <div id="checkboxContainer"></div>
+            <br><br>
+
+            <label for="comments">Comments*:</label>
+            <textarea id="comments" rows="5" cols="25"></textarea>
+            <span id="commentsError" class="error"></span>
+            <br><br>
+
+            <input type="submit" id="submitBtn" disabled />
+            <input type="reset" />
+        </form>
+    </div>
+
+    <div id="submissions"></div>
+
+    <script>
+        const submissions = [], checkboxes = {};
+        const patterns = {
+            firstName: /^[a-zA-Z0-9]{2,30}$/,
+            lastName: /^[a-zA-Z0-9]{2,30}$/,
+            emailId: /^[\w.-]+@northeastern\.edu$/,
+            phoneNumber: /^\(\d{3}\) \d{3}-\d{4}$/,
+            zipcode: /^\d{5}$/,
+            streetAddress1: /^.{2,}$/,
+            comments: /.+/
+        };
+
+        const inputs = {
+            title: document.querySelectorAll('input[name="title"]'),
+            firstName: document.getElementById('firstName'),
+            lastName: document.getElementById('lastName'),
+            emailId: document.getElementById('emailId'),
+            phoneNumber: document.getElementById('phoneNumber'),
+            zipcode: document.getElementById('zipcode'),
+            streetAddress1: document.getElementById('streetAddress1'),
+            streetAddress2: document.getElementById('streetAddress2'),
+            comments: document.getElementById('comments'),
+            dynamicSelect: document.getElementById('dynamicSelect')
+        };
+
+        const errors = Object.fromEntries(
+            ['title', 'firstName', 'lastName', 'emailId', 'phoneNumber', 'zipcode', 
+             'streetAddress1', 'comments', 'dynamicSelect']
+            .map(id => [id, document.getElementById(id + 'Error')])
+        );
+
+        // Phone number masking
+        inputs.phoneNumber.addEventListener('input', e => {
+            let value = e.target.value.replace(/\D/g, '').slice(0, 10);
+            if (value.length >= 6) {
+                e.target.value = `(${value.slice(0,3)}) ${value.slice(3,6)}-${value.slice(6)}`;
+            } else if (value.length >= 3) {
+                e.target.value = `(${value.slice(0,3)}) ${value.slice(3)}`;
+            } else if (value.length > 0) {
+                e.target.value = `(${value}`;
+            }
+        });
+
+        // Character counter
+        inputs.streetAddress2.addEventListener('input', function() {
+            document.getElementById('streetAddress2Counter').textContent = 
+                `${this.value.length}/${this.maxLength} characters used`;
+        });
+
+        // Dynamic select handling
+        inputs.dynamicSelect.addEventListener('change', function() {
+            if (!this.value) return;
+            const text = this.options[this.selectedIndex].text;
+            
+            if (!checkboxes[this.value]) {
+                const container = document.createElement('div');
+                container.innerHTML = `
+                    <input type="checkbox" id="cb_${this.value}">
+                    <label for="cb_${this.value}">${text}</label>
+                    <div class="option-text" style="display:none">
+                        <input type="text" required placeholder="Enter details">
+                        <span class="error"></span>
+                    </div>
+                `;
+
+                const checkbox = container.querySelector('input[type="checkbox"]');
+                const textDiv = container.querySelector('.option-text');
+                
+                checkbox.addEventListener('change', e => {
+                    textDiv.style.display = e.target.checked ? 'block' : 'none';
+                    if (!e.target.checked) textDiv.querySelector('input').value = '';
+                    validateForm();
+                });
+
+                textDiv.querySelector('input').addEventListener('input', validateForm);
+                document.getElementById('checkboxContainer').appendChild(container);
+                checkboxes[this.value] = { container, checkbox, textDiv };
+            }
+            this.selectedIndex = 0;
+            validateForm();
+        });
+
+        function formatTitle(title) {
+            return title ? title.charAt(0).toUpperCase() + title.slice(1).toLowerCase() + '.' : '';
+        }
+
+        function validateForm() {
+            let allValid = true;
+            
+            // Clear previous errors
+            Object.values(errors).forEach(error => error.textContent = '');
+            
+            // Validate regular fields
+            Object.entries(inputs).forEach(([field, element]) => {
+                if (field === 'streetAddress2' || field === 'dynamicSelect') return;
+                
+                if (element instanceof NodeList) {
+                    if (!Array.from(element).some(radio => radio.checked)) {
+                        errors[field].textContent = 'Required';
+                        allValid = false;
+                    }
+                } else if (!patterns[field].test(element.value)) {
+                    errors[field].textContent = field === 'emailId' ? 'Must be a valid northeastern.edu email' :
+                                              field === 'phoneNumber' ? 'Format: (XXX) XXX-XXXX' :
+                                              field === 'zipcode' ? 'Must be a valid 5-digit zipcode' :
+                                              field === 'streetAddress1' ? 'Must be at least 2 characters' :
+                                              'Required';
+                    allValid = false;
+                }
+            });
+
+            // Validate dynamic options
+            if (Object.keys(checkboxes).length > 0) {
+                const hasChecked = Object.values(checkboxes).some(item => item.checkbox.checked);
+                if (!hasChecked) {
+                    errors.dynamicSelect.textContent = 'At least one option must be selected';
+                    allValid = false;
+                }
+                
+                Object.values(checkboxes).forEach(item => {
+                    if (item.checkbox.checked) {
+                        const textInput = item.textDiv.querySelector('input');
+                        if (!textInput.value.trim()) {
+                            item.textDiv.querySelector('.error').textContent = 'Required';
+                            allValid = false;
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('submitBtn').disabled = !allValid;
+            return allValid;
+        }
+
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const formData = {
+                title: formatTitle(Array.from(inputs.title).find(radio => radio.checked)?.value),
+                firstName: inputs.firstName.value,
+                lastName: inputs.lastName.value,
+                emailId: inputs.emailId.value,
+                phoneNumber: inputs.phoneNumber.value,
+                zipcode: inputs.zipcode.value,
+                streetAddress1: inputs.streetAddress1.value,
+                streetAddress2: inputs.streetAddress2.value || '',
+                comments: inputs.comments.value,
+                options: Object.entries(checkboxes)
+                    .filter(([_, item]) => item.checkbox.checked)
+                    .map(([key, {textDiv}]) => ({
+                        option: key,
+                        details: textDiv.querySelector('input').value
+                    }))
+            };
+
+            submissions.push(formData);
+            
+            const table = document.createElement('table');
+            table.id = 'submissionsTable';
+            table.innerHTML = `
+                <tr>${['Title', 'First Name', 'Last Name', 'Email', 'Phone',
+                       'Zipcode', 'Street Address 1', 'Street Address 2',
+                       'Comments', 'Selected Options'].map(h => `<th>${h}</th>`).join('')}</tr>
+                ${submissions.map(data => `
+                    <tr>${[
+                        data.title, data.firstName, data.lastName, data.emailId,
+                        data.phoneNumber, data.zipcode, data.streetAddress1,
+                        data.streetAddress2, data.comments,
+                        data.options.map(o => `${o.option}: ${o.details}`).join(', ')
+                    ].map(d => `<td>${d}</td>`).join('')}</tr>
+                `).join('')}
+            `;
+            
+            const existing = document.getElementById('submissionsTable');
+            if (existing) existing.remove();
+            document.getElementById('submissions').appendChild(table);
+
+            this.reset();
+            document.getElementById('checkboxContainer').innerHTML = '';
+            checkboxes = {};
+            document.getElementById('streetAddress2Counter').textContent = '';
+            validateForm();
+        });
+
+        // Initial validation
+        Object.values(inputs).forEach(input => {
+            if (input instanceof NodeList) {
+                input.forEach(i => i.addEventListener('change', validateForm));
+            } else {
+                input.addEventListener('input', validateForm);
+            }
+        });
+    </script>
+</body>
+</html>
