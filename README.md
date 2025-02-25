@@ -5,7 +5,11 @@ This project implements a dynamic feedback form with real-time validation, input
 
 ## Features
 
-### Form Validations
+### Form Validations![ss3](https://github.com/user-attachments/assets/61447c36-2f08-404e-9de5-108ab9b8a473)
+![ss2](https://github.com/user-attachments/assets/cf0079f9-43aa-42d8-8ff0-eefe47e45a29)
+![assignment4](https://github.com/user-attachments/assets/33aa522a-5d89-4a1c-8e71-2a71b0210410)
+![ss4](https://github.com/user-attachments/assets/b031784a-0997-426f-bfe6-adcaffa5e2a5)
+
 - All mandatory fields marked with asterisk (*)
 - Real-time validation on key events
 - Custom validation rules:
